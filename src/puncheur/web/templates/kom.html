@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% set active_page = "kom" %}
+
+{% block title %}KOM Planner — Puncheur{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>KOM Attempt Planner</h2>
+    <p>Pick your target. Get your plan. Go take it.</p>
+</div>
+
+<!-- Plan Form -->
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+        <div class="card-title">Plan Your Attack</div>
+    </div>
+    <form method="POST">
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Segment Name</label>
+                <input type="text" name="segment" class="form-input" placeholder="e.g., Providence Road Wall" value="{{ request.form.get('segment', '') }}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">How long is the effort?</label>
+                <select name="duration" class="form-select">
+                    <option value="30" {{ 'selected' if request.form.get('duration') == '30' }}>30 seconds — Sprint</option>
+                    <option value="60" {{ 'selected' if request.form.get('duration', '60') == '60' }}>1 minute — Short climb</option>
+                    <option value="120" {{ 'selected' if request.form.get('duration') == '120' }}>2 minutes — Medium climb</option>
+                    <option value="300" {{ 'selected' if request.form.get('duration') == '300' }}>5 minutes — Long climb</option>
+                    <option value="600" {{ 'selected' if request.form.get('duration') == '600' }}>10 minutes — Major climb</option>
+                    <option value="1200" {{ 'selected' if request.form.get('duration') == '1200' }}>20 minutes — TT effort</option>
+                </select>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Generate Plan</button>
+    </form>
+</div>
+
+{% if plan %}
+<!-- Target Metrics -->
+<div class="metrics-grid">
+    <div class="metric">
+        <div class="metric-value accent">{{ plan.target_power }}</div>
+        <div class="metric-label">Target Power</div>
+        <div class="metric-hint">Watts to hold</div>
+    </div>
+    <div class="metric">
+        <div class="metric-value blue">{{ plan.target_power_per_kg }}</div>
+        <div class="metric-label">Target W/kg</div>
+        <div class="metric-hint">Power to weight</div>
+    </div>
+    <div class="metric">
+        <div class="metric-value">{{ plan.target_duration_s }}s</div>
+        <div class="metric-label">Duration</div>
+        <div class="metric-hint">Target time</div>
+    </div>
+    <div class="metric">
+        <div class="metric-value green">{{ plan.warmup_duration_min }}m</div>
+        <div class="metric-label">Warm-Up</div>
+        <div class="metric-hint">Minutes to prepare</div>
+    </div>
+</div>
+
+<!-- Pacing Strategy -->
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div class="card-header">
+        <div class="card-title">Pacing Strategy</div>
+        <span class="badge badge-blue">{{ plan.effort_category }}</span>
+    </div>
+    <div class="tactic">{{ plan.pacing_strategy }}</div>
+
+    <table class="pacing-table" style="margin-top: 1rem;">
+        <thead>
+            <tr>
+                <th>Section</th>
+                <th>Power</th>
+                <th>Cue</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for split in plan.pacing_splits %}
+            <tr>
+                <td>{{ split.pct_of_effort }}</td>
+                <td style="font-family: var(--font-mono); font-weight: 600;">{{ split.power_pct }}%</td>
+                <td style="color: var(--text-secondary);">{{ split.note }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- W'bal Analysis -->
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div class="card-header">
+        <div class="card-title">Energy Budget</div>
+        {% if plan.wbal_analysis.sustainable %}
+        <span class="badge badge-green">Sustainable</span>
+        {% else %}
+        <span class="badge badge-red">Unsustainable</span>
+        {% endif %}
+    </div>
+    <div class="metrics-grid" style="margin-bottom: 0;">
+        <div class="metric" style="padding: 0.75rem;">
+            <div class="metric-value" style="font-size: 1.3rem;">{{ plan.wbal_analysis.power_above_ftp }}W</div>
+            <div class="metric-label">Above Threshold</div>
+        </div>
+        <div class="metric" style="padding: 0.75rem;">
+            <div class="metric-value" style="font-size: 1.3rem;">{{ plan.wbal_analysis.total_w_cost }}J</div>
+            <div class="metric-label">Total Energy Cost</div>
+        </div>
+        <div class="metric" style="padding: 0.75rem;">
+            <div class="metric-value {% if plan.wbal_analysis.depletion_pct > 100 %}red{% elif plan.wbal_analysis.depletion_pct > 80 %}yellow{% else %}green{% endif %}" style="font-size: 1.3rem;">{{ plan.wbal_analysis.depletion_pct }}%</div>
+            <div class="metric-label">Tank Usage</div>
+        </div>
+    </div>
+    {% if plan.wbal_warning is defined %}
+    <div class="tactic warning" style="margin-top: 1rem;">{{ plan.wbal_warning }}</div>
+    {% endif %}
+</div>
+
+<!-- Warm-Up Link -->
+<div style="text-align: center; margin-top: 1.5rem;">
+    <a href="{{ url_for('warmup', duration=plan.target_duration_s) }}" class="btn btn-secondary btn-large">
+        View Warm-Up Protocol ({{ plan.warmup_duration_min }} min)
+    </a>
+</div>
+{% endif %}
+{% endblock %}

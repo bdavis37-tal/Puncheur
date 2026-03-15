@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% set active_page = "upload" %}
+
+{% block title %}Ride Analysis — {{ ride.name }} | Puncheur{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>{{ ride.name or "Your Ride" }}</h2>
+    <p>{{ "%.0f"|format(ride.duration_seconds / 60) }} minutes — here's how it went.</p>
+</div>
+
+<!-- Key Metrics -->
+<div class="metrics-grid">
+    <div class="metric">
+        <div class="metric-value accent">{{ "%.0f"|format(ride.avg_power) }}</div>
+        <div class="metric-label">Avg Power</div>
+        <div class="metric-hint">Overall average watts</div>
+    </div>
+    <div class="metric">
+        <div class="metric-value accent">{{ np }}</div>
+        <div class="metric-label">Weighted Power</div>
+        <div class="metric-hint">Accounts for hard efforts</div>
+    </div>
+    <div class="metric">
+        <div class="metric-value blue">{{ tss }}</div>
+        <div class="metric-label">Training Load</div>
+        <div class="metric-hint">100 = 1hr at threshold</div>
+    </div>
+    <div class="metric">
+        <div class="metric-value">{{ intensity_factor }}</div>
+        <div class="metric-label">Intensity</div>
+        <div class="metric-hint">Fraction of your FTP</div>
+    </div>
+    <div class="metric">
+        <div class="metric-value {% if wbal_min > 5000 %}green{% elif wbal_min > 1000 %}yellow{% else %}red{% endif %}">
+            {{ "%.1f"|format(wbal_min / 1000) }}k
+        </div>
+        <div class="metric-label">Lowest Energy Reserve</div>
+        <div class="metric-hint">How deep you dug (joules)</div>
+    </div>
+    <div class="metric">
+        <div class="metric-value {% if matches_burned > 5 %}red{% elif matches_burned > 3 %}yellow{% else %}green{% endif %}">
+            {{ matches_burned }}
+        </div>
+        <div class="metric-label">Matches Burned</div>
+        <div class="metric-hint">Hard efforts >30s above 120% FTP</div>
+    </div>
+</div>
+
+<!-- Power Chart -->
+<div class="chart-box">
+    <div class="chart-label">Power Throughout the Ride</div>
+    {{ power_svg | safe }}
+</div>
+
+<!-- Energy Reserve Chart -->
+<div class="chart-box">
+    <div class="chart-label">Energy Reserve (W'bal) — {{ rider.w_prime }} J capacity</div>
+    {{ wbal_svg | safe }}
+</div>
+
+<!-- Fatigue Assessment -->
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div class="card-header">
+        <div class="card-title">Fatigue Assessment</div>
+        {% if fatigue.score < 30 %}
+        <span class="badge badge-green">Low Fatigue</span>
+        {% elif fatigue.score < 60 %}
+        <span class="badge badge-yellow">Moderate</span>
+        {% else %}
+        <span class="badge badge-red">Heavy Fatigue</span>
+        {% endif %}
+    </div>
+    <div class="tactic {% if fatigue.score < 30 %}success{% elif fatigue.score < 60 %}info{% else %}warning{% endif %}">
+        {{ fatigue.assessment }}
+    </div>
+    <div class="metrics-grid" style="margin-top: 1rem; margin-bottom: 0;">
+        <div class="metric" style="padding: 0.75rem;">
+            <div class="metric-value" style="font-size: 1.3rem;">{{ "%.1f"|format(fatigue.ride_power_fade_pct) }}%</div>
+            <div class="metric-label">Power Fade</div>
+        </div>
+        <div class="metric" style="padding: 0.75rem;">
+            <div class="metric-value" style="font-size: 1.3rem;">{{ "%.1f"|format(fatigue.cadence_drift_pct) }}%</div>
+            <div class="metric-label">Cadence Drift</div>
+        </div>
+        <div class="metric" style="padding: 0.75rem;">
+            <div class="metric-value" style="font-size: 1.3rem;">{{ "%.1f"|format(fatigue.cardiac_decoupling_pct) }}%</div>
+            <div class="metric-label">HR Decoupling</div>
+        </div>
+    </div>
+</div>
+
+<!-- Power Benchmarks -->
+{% if benchmarks %}
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div class="card-header">
+        <div class="card-title">Best Efforts This Ride</div>
+    </div>
+    <div class="metrics-grid" style="margin-bottom: 0;">
+        {% for label, value in benchmarks.items() %}
+        {% if value > 0 %}
+        <div class="metric" style="padding: 0.75rem;">
+            <div class="metric-value blue" style="font-size: 1.3rem;">{{ "%.0f"|format(value) }}</div>
+            <div class="metric-label">{{ label }}</div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Segments -->
+{% if segments %}
+<h3 style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em;">Segment Breakdown</h3>
+{% for seg in segments %}
+<div class="segment-card">
+    <div class="segment-header">
+        <span class="segment-name">{{ seg.name }}</span>
+        <span class="segment-badge">{{ seg.gradient }}% avg</span>
+    </div>
+    <div class="segment-metrics">
+        <div class="seg-metric">
+            <div class="seg-metric-value" style="color: var(--accent);">{{ seg.avg_power }}W</div>
+            <div class="seg-metric-label">Avg Power</div>
+        </div>
+        <div class="seg-metric">
+            <div class="seg-metric-value">{{ seg.max_power }}W</div>
+            <div class="seg-metric-label">Peak</div>
+        </div>
+        <div class="seg-metric">
+            <div class="seg-metric-value">{{ seg.np }}W</div>
+            <div class="seg-metric-label">Weighted</div>
+        </div>
+        <div class="seg-metric">
+            <div class="seg-metric-value">{{ seg.duration }}s</div>
+            <div class="seg-metric-label">Time</div>
+        </div>
+        <div class="seg-metric">
+            <div class="seg-metric-value">{{ seg.avg_hr }}</div>
+            <div class="seg-metric-label">Avg HR</div>
+        </div>
+        <div class="seg-metric">
+            <div class="seg-metric-value">{{ seg.avg_cadence }}</div>
+            <div class="seg-metric-label">Cadence</div>
+        </div>
+        <div class="seg-metric">
+            <div class="seg-metric-value" style="color: var(--blue);">{{ seg.wbal_entry }}J</div>
+            <div class="seg-metric-label">Energy at Start</div>
+        </div>
+        <div class="seg-metric">
+            <div class="seg-metric-value">{{ seg.elevation_gain }}m</div>
+            <div class="seg-metric-label">Climbing</div>
+        </div>
+    </div>
+    {% if seg.power_svg %}
+    <div class="segment-chart">
+        {{ seg.power_svg | safe }}
+    </div>
+    {% endif %}
+</div>
+{% endfor %}
+{% endif %}
+
+<div style="margin-top: 2rem; text-align: center;">
+    <a href="{{ url_for('upload') }}" class="btn btn-secondary">Analyze Another Ride</a>
+</div>
+{% endblock %}

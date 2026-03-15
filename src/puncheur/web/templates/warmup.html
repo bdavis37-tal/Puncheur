@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% set active_page = "kom" %}
+
+{% block title %}Warm-Up Protocol — Puncheur{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Warm-Up Protocol</h2>
+    <p>{{ protocol.effort_type }} — {{ protocol.total_minutes }} minutes total</p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">Step-by-Step Warm-Up</div>
+        <span class="badge badge-blue">{{ protocol.total_minutes }} min</span>
+    </div>
+
+    <div class="warmup-timeline">
+        {% for step in protocol.steps %}
+        <div class="warmup-step">
+            <div class="warmup-zone-badge {% if 'Z5' in step.zone or 'Z6' in step.zone %}hard{% elif 'Z7' in step.zone or 'MAX' in step.power %}max{% endif %}">
+                {{ step.zone }}
+            </div>
+            <div class="warmup-desc">{{ step.description }}</div>
+            <div class="warmup-power">{{ step.power }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div style="margin-top: 1.5rem;">
+    <a href="{{ url_for('kom') }}" class="btn btn-ghost">&larr; Back to KOM Planner</a>
+</div>
+{% endblock %}

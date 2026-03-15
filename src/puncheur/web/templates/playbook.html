@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% set active_page = "playbook" %}
+
+{% block title %}Playbook — {{ route.name }} | Puncheur{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>{{ route.name }}</h2>
+    <p>Your game plan for race day. {{ route.segments|length }} segments to manage.</p>
+</div>
+
+<!-- Rider Status -->
+<div class="fitness-banner">
+    <div class="fitness-card">
+        <div class="fitness-icon fit">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4ecdc4" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <div class="fitness-meta">
+            <div class="fitness-value" style="color: var(--blue);">{{ playbook.fitness.ctl }}</div>
+            <div class="fitness-label">Fitness</div>
+        </div>
+    </div>
+    <div class="fitness-card">
+        <div class="fitness-icon fatigue">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6b35" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+        </div>
+        <div class="fitness-meta">
+            <div class="fitness-value" style="color: var(--accent);">{{ playbook.fitness.atl }}</div>
+            <div class="fitness-label">Fatigue</div>
+        </div>
+    </div>
+    <div class="fitness-card">
+        <div class="fitness-icon form">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#06d6a0" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+        </div>
+        <div class="fitness-meta">
+            <div class="fitness-value" style="color: var(--green);">{{ playbook.fitness.tsb }}</div>
+            <div class="fitness-label">Form</div>
+        </div>
+    </div>
+</div>
+
+<!-- Match Budget -->
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+        <div class="card-title">Match Budget</div>
+        {% if playbook.match_budget.status == 'comfortable' %}
+        <span class="badge badge-green">Comfortable</span>
+        {% elif playbook.match_budget.status == 'tight' %}
+        <span class="badge badge-yellow">Tight</span>
+        {% else %}
+        <span class="badge badge-red">Critical</span>
+        {% endif %}
+    </div>
+
+    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">
+        Your anaerobic tank holds <strong style="color: var(--text-primary);">{{ playbook.match_budget.w_prime }}J</strong>.
+        This ride is estimated to cost <strong style="color: var(--text-primary);">{{ playbook.match_budget.total_estimated_cost }}J</strong>
+        — that's <strong style="color: {% if playbook.match_budget.budget_pct < 70 %}var(--green){% elif playbook.match_budget.budget_pct < 90 %}var(--yellow){% else %}var(--red){% endif %};">{{ playbook.match_budget.budget_pct }}%</strong> of your capacity.
+    </p>
+
+    <!-- Budget bar -->
+    {% set pct = playbook.match_budget.budget_pct %}
+    <div style="background: var(--bg-elevated); border-radius: 8px; height: 28px; overflow: hidden; position: relative;">
+        <div style="
+            height: 100%;
+            width: {{ [pct, 100]|min }}%;
+            background: {% if pct < 70 %}var(--green){% elif pct < 90 %}var(--yellow){% else %}var(--red){% endif %};
+            border-radius: 8px;
+            transition: width 0.5s ease;
+        "></div>
+        <span style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 0.8rem; font-weight: 600;">
+            {{ "%.0f"|format(pct) }}%
+        </span>
+    </div>
+</div>
+
+<!-- Segment Plans -->
+<h3 style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em;">Segment Targets</h3>
+
+{% for seg in playbook.segments %}
+<div class="segment-card">
+    <div class="segment-header">
+        <span class="segment-name">{{ seg.name }}</span>
+        <span class="segment-badge">{{ seg.gradient }}% · ~{{ seg.estimated_duration }}s</span>
+    </div>
+
+    <div class="segment-metrics">
+        <div class="seg-metric">
+            <div class="seg-metric-value" style="color: var(--accent);">{{ seg.target_power }}W</div>
+            <div class="seg-metric-label">Target Power</div>
+        </div>
+        <div class="seg-metric">
+            <div class="seg-metric-value" style="color: var(--blue);">{{ seg.w_cost }}J</div>
+            <div class="seg-metric-label">Energy Cost</div>
+        </div>
+        <div class="seg-metric">
+            <div class="seg-metric-value" style="color: var(--green);">{{ seg.pre_climb_target }}W</div>
+            <div class="seg-metric-label">Approach Power</div>
+        </div>
+    </div>
+
+    <div class="tactic">{{ seg.tactic }}</div>
+    {% if seg.notes %}
+    <div class="tactic info">{{ seg.notes }}</div>
+    {% endif %}
+</div>
+{% endfor %}
+
+<!-- Pre-Ride Notes -->
+{% if playbook.pre_ride_notes %}
+<h3 style="margin-top: 2rem; margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em;">Coach's Notes</h3>
+{% for note in playbook.pre_ride_notes %}
+<div class="tactic info">{{ note }}</div>
+{% endfor %}
+{% endif %}
+{% endblock %}

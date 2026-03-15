@@ -19,7 +19,8 @@ from puncheur import __version__
 app = typer.Typer(
     name="puncheur",
     help="Your Ride. Your Hills. Your Playbook.",
-    no_args_is_help=True,
+    no_args_is_help=False,
+    invoke_without_command=True,
 )
 route_app = typer.Typer(help="Manage ride routes and tagged segments.")
 profile_app = typer.Typer(help="Manage rider profile.")
@@ -38,13 +39,33 @@ def version_callback(value: bool) -> None:
         raise typer.Exit()
 
 
-@app.callback()
+@app.callback(invoke_without_command=True)
 def main(
+    ctx: typer.Context,
     version: Optional[bool] = typer.Option(
         None, "--version", "-v", help="Show version.", callback=version_callback, is_eager=True
     ),
+    port: int = typer.Option(5050, "--port", "-p", help="Port for the web UI."),
+    no_browser: bool = typer.Option(False, "--no-browser", help="Don't open the browser."),
+    cli_mode: bool = typer.Option(False, "--cli", help="Use CLI mode instead of web UI."),
 ) -> None:
-    """Puncheur — Your Ride. Your Hills. Your Playbook."""
+    """Puncheur — Your Ride. Your Hills. Your Playbook.
+
+    Run without arguments to launch the web UI in your browser.
+    Use --cli for the traditional command-line interface.
+    """
+    if ctx.invoked_subcommand is None and not cli_mode:
+        # Default action: launch the web UI
+        from puncheur.web.app import run_app
+
+        console.print(
+            Panel(
+                f"[bold]Puncheur[/bold] is running at [link=http://127.0.0.1:{port}]http://127.0.0.1:{port}[/link]\n"
+                f"Press Ctrl+C to stop.",
+                style="bold orange1",
+            )
+        )
+        run_app(port=port, open_browser=not no_browser)
 
 
 # ── Init ──────────────────────────────────────────────────────────────

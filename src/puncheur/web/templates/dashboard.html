@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% set active_page = "dashboard" %}
+{% set sidebar_routes = routes %}
+
+{% block title %}Dashboard — Puncheur{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Hey {{ rider.name }} 👋</h2>
+    <p>Here's where you stand.</p>
+</div>
+
+<!-- Fitness Banner -->
+<div class="fitness-banner">
+    <div class="fitness-card">
+        <div class="fitness-icon fit">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4ecdc4" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <div class="fitness-meta">
+            <div class="fitness-value" style="color: var(--blue);">{{ "%.0f"|format(fitness.ctl) }}</div>
+            <div class="fitness-label">Fitness</div>
+            <div class="fitness-desc">Training load over 6 weeks</div>
+        </div>
+    </div>
+    <div class="fitness-card">
+        <div class="fitness-icon fatigue">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6b35" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+        </div>
+        <div class="fitness-meta">
+            <div class="fitness-value" style="color: var(--accent);">{{ "%.0f"|format(fitness.atl) }}</div>
+            <div class="fitness-label">Fatigue</div>
+            <div class="fitness-desc">Training load this week</div>
+        </div>
+    </div>
+    <div class="fitness-card">
+        <div class="fitness-icon form">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#06d6a0" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        </div>
+        <div class="fitness-meta">
+            {% set tsb = fitness.tsb %}
+            <div class="fitness-value" style="color: {% if tsb > 5 %}var(--green){% elif tsb > -10 %}var(--yellow){% else %}var(--red){% endif %};">
+                {% if tsb > 0 %}+{% endif %}{{ "%.0f"|format(tsb) }}
+            </div>
+            <div class="fitness-label">Form</div>
+            <div class="fitness-desc">
+                {% if tsb > 15 %}Very fresh — race ready
+                {% elif tsb > 5 %}Fresh — good to go
+                {% elif tsb > -5 %}Balanced — normal training
+                {% elif tsb > -15 %}Fatigued — building fitness
+                {% else %}Deep fatigue — recovery needed
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="actions-grid">
+    <a href="{{ url_for('upload') }}" class="action-card">
+        <div class="action-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff6b35" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </div>
+        <h3>Analyze a Ride</h3>
+        <p>Upload a .fit file from your Garmin, Wahoo, or Hammerhead for instant post-ride insights.</p>
+    </a>
+    {% if routes %}
+    <a href="{{ url_for('playbook', route_slug=routes[0].slug) }}" class="action-card">
+        <div class="action-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4ecdc4" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <h3>Pre-Ride Playbook</h3>
+        <p>Get pacing targets and tactics for {{ routes[0].name }}. Know the plan before you clip in.</p>
+    </a>
+    {% endif %}
+    <a href="{{ url_for('kom') }}" class="action-card">
+        <div class="action-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#06d6a0" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </div>
+        <h3>KOM Attempt</h3>
+        <p>Plan a segment attack with target power, pacing splits, and a warm-up protocol.</p>
+    </a>
+</div>
+
+<!-- Your Routes -->
+{% if routes %}
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">Your Routes</div>
+    </div>
+    <div class="route-list">
+        {% for route in routes %}
+        <div class="route-item">
+            <div class="route-info">
+                <h4>{{ route.name }}</h4>
+                <span>{{ route.segments }} segment{{ 's' if route.segments != 1 else '' }} tagged</span>
+            </div>
+            <div class="route-actions">
+                <a href="{{ url_for('playbook', route_slug=route.slug) }}" class="btn btn-secondary">Playbook</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% else %}
+<div class="card" style="text-align: center; padding: 3rem;">
+    <p style="color: var(--text-secondary); margin-bottom: 1rem;">No routes saved yet. Add your first ride route to unlock playbooks and segment tracking.</p>
+    <p style="font-size: 0.85rem; color: var(--text-dim);">Use the CLI to add routes: <code style="color: var(--blue);">puncheur route add "tuesday_ride" route.gpx</code></p>
+</div>
+{% endif %}
+
+<!-- Rider Quick Stats -->
+<div style="margin-top: 2rem;">
+    <div class="metrics-grid">
+        <div class="metric">
+            <div class="metric-value accent">{{ rider.ftp }}</div>
+            <div class="metric-label">FTP (watts)</div>
+            <div class="metric-hint">Your hour power</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value blue">{{ "%.1f"|format(rider.w_per_kg) }}</div>
+            <div class="metric-label">W/kg</div>
+            <div class="metric-hint">Power to weight</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value green">{{ rider.w_prime }}</div>
+            <div class="metric-label">W' (joules)</div>
+            <div class="metric-hint">Your anaerobic tank</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value">{{ rider.max_heart_rate }}</div>
+            <div class="metric-label">Max HR</div>
+            <div class="metric-hint">Beats per minute</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% set active_page = "upload" %}
+
+{% block title %}Upload Ride — Puncheur{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Analyze a Ride</h2>
+    <p>Drop your .fit file and get instant post-ride insights.</p>
+</div>
+
+<form method="POST" enctype="multipart/form-data" id="upload-form">
+    <div class="upload-zone" id="drop-zone">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        <h3>Drop your ride file here</h3>
+        <p>or click to browse</p>
+        <div class="supported">Supports .fit files from Garmin, Wahoo, Hammerhead, and other cycling computers</div>
+        <input type="file" name="file" id="file-input" accept=".fit">
+    </div>
+
+    {% if routes %}
+    <div class="route-selector">
+        <label for="route">Match against route:</label>
+        <select name="route" id="route">
+            <option value="">No route (just overall analysis)</option>
+            {% for route in routes %}
+            <option value="{{ route.slug }}">{{ route.name }} ({{ route.segments }} segments)</option>
+            {% endfor %}
+        </select>
+    </div>
+    {% endif %}
+
+    <div id="file-name" style="text-align: center; margin-top: 1rem; display: none;">
+        <span style="color: var(--green); font-weight: 600;" id="selected-name"></span>
+        <button type="submit" class="btn btn-primary btn-large" style="margin-top: 1rem; display: block; margin-left: auto; margin-right: auto;">
+            Analyze This Ride
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+const fileName = document.getElementById('file-name');
+const selectedName = document.getElementById('selected-name');
+
+['dragenter', 'dragover'].forEach(event => {
+    dropZone.addEventListener(event, (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+});
+
+['dragleave', 'drop'].forEach(event => {
+    dropZone.addEventListener(event, (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+    });
+});
+
+dropZone.addEventListener('drop', (e) => {
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        fileInput.files = files;
+        showFileName(files[0].name);
+    }
+});
+
+fileInput.addEventListener('change', () => {
+    if (fileInput.files.length > 0) {
+        showFileName(fileInput.files[0].name);
+    }
+});
+
+function showFileName(name) {
+    selectedName.textContent = name;
+    fileName.style.display = 'block';
+}
+</script>
+{% endblock %}

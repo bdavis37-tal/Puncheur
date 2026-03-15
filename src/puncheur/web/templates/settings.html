@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% set active_page = "settings" %}
+
+{% block title %}Settings — Puncheur{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Settings</h2>
+    <p>Your rider profile and power zones.</p>
+</div>
+
+<div class="card" style="max-width: 600px;">
+    <div class="card-header">
+        <div class="card-title">Rider Profile</div>
+    </div>
+    <form method="POST">
+        <div class="form-group">
+            <label class="form-label">Name</label>
+            <input type="text" name="name" class="form-input" value="{{ rider.name }}">
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">FTP (watts)</label>
+                <div class="form-hint">Your one-hour power</div>
+                <input type="number" name="ftp" class="form-input" value="{{ rider.ftp }}" min="80" max="500">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Weight (kg)</label>
+                <input type="number" name="weight" class="form-input" value="{{ rider.weight_kg }}" step="0.5" min="40" max="150">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Max Heart Rate (bpm)</label>
+                <input type="number" name="max_hr" class="form-input" value="{{ rider.max_heart_rate }}" min="120" max="220">
+            </div>
+            <div class="form-group">
+                <label class="form-label">W' — Anaerobic Tank (joules)</label>
+                <div class="form-hint">15,000–25,000 is typical</div>
+                <input type="number" name="w_prime" class="form-input" value="{{ rider.w_prime }}" min="5000" max="40000" step="1000">
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem;">Save Changes</button>
+    </form>
+</div>
+
+<!-- Power Zones Reference -->
+<div class="card" style="max-width: 600px; margin-top: 1.5rem;">
+    <div class="card-header">
+        <div class="card-title">Your Power Zones (auto-calculated from FTP)</div>
+    </div>
+    <table class="pacing-table">
+        <thead>
+            <tr>
+                <th>Zone</th>
+                <th>Range</th>
+                <th>Feel</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% set zone_feels = {
+                'z1_recovery': 'Easy spinning, conversation',
+                'z2_endurance': 'All-day pace, can talk',
+                'z3_tempo': 'Comfortably hard',
+                'z4_threshold': 'Race pace, can\'t talk much',
+                'z5_vo2max': 'Hard — 3-8 minute efforts',
+                'z6_anaerobic': 'Very hard — 30s to 2 min',
+                'z7_neuromuscular': 'All-out sprint'
+            } %}
+            {% set zone_names = {
+                'z1_recovery': 'Z1 Recovery',
+                'z2_endurance': 'Z2 Endurance',
+                'z3_tempo': 'Z3 Tempo',
+                'z4_threshold': 'Z4 Threshold',
+                'z5_vo2max': 'Z5 VO2max',
+                'z6_anaerobic': 'Z6 Anaerobic',
+                'z7_neuromuscular': 'Z7 Sprint'
+            } %}
+            {% for key, bounds in rider.power_zones.items() %}
+            <tr>
+                <td>{{ zone_names.get(key, key) }}</td>
+                <td style="font-family: var(--font-mono);">{{ bounds[0] }}–{{ bounds[1] if bounds[1] < 9000 else '∞' }}W</td>
+                <td style="color: var(--text-secondary);">{{ zone_feels.get(key, '') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Quick Stats -->
+<div class="metrics-grid" style="max-width: 600px; margin-top: 1.5rem;">
+    <div class="metric">
+        <div class="metric-value accent">{{ rider.ftp }}</div>
+        <div class="metric-label">FTP</div>
+    </div>
+    <div class="metric">
+        <div class="metric-value blue">{{ "%.2f"|format(rider.w_per_kg) }}</div>
+        <div class="metric-label">W/kg</div>
+    </div>
+    <div class="metric">
+        <div class="metric-value green">{{ rider.w_prime }}</div>
+        <div class="metric-label">W' (J)</div>
+    </div>
+</div>
+{% endblock %}
