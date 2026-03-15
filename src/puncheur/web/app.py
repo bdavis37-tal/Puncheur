@@ -77,11 +77,29 @@ def index():
 
     fitness = compute_fitness()
 
+    # Compute 7-day trend from history
+    fitness_trend = {"ctl_delta": 0, "atl_delta": 0}
+    history = fitness.get("history", [])
+    if len(history) > 7:
+        fitness_trend["ctl_delta"] = round(history[-1]["ctl"] - history[-8]["ctl"], 1)
+        fitness_trend["atl_delta"] = round(history[-1]["atl"] - history[-8]["atl"], 1)
+
+    # Count training days this week (Mon-Sun)
+    week_tss_total = 0
+    week_rides = 0
+    for entry in history[-7:]:
+        if entry["tss"] > 0:
+            week_tss_total += entry["tss"]
+            week_rides += 1
+
     return render_template(
         "dashboard.html",
         rider=rider,
         routes=routes,
         fitness=fitness,
+        fitness_trend=fitness_trend,
+        week_tss=round(week_tss_total),
+        week_rides=week_rides,
         demo_ride_available=is_demo_available(),
     )
 
@@ -204,7 +222,7 @@ def analyze():
     matches = count_matches_burned(ride.power_stream, rider.ftp)
     fatigue = analyze_ride_fatigue(ride)
 
-    power_svg = _generate_power_svg(ride.power_stream, width=800, height=120)
+    power_svg = _generate_power_svg(ride.power_stream, width=800, height=120, ftp=rider.ftp)
     wbal_svg = _generate_wbal_svg(wbal, rider.w_prime, width=800, height=100)
 
     # Segment matching
@@ -237,6 +255,7 @@ def analyze():
             "gradient": sm.segment.avg_gradient_pct,
             "elevation_gain": round(sm.elevation_gain, 1),
             "power_svg": seg_power_svg,
+            "ftp_pct": round(sm.avg_power / rider.ftp * 100),
         })
 
     return render_template(
@@ -253,6 +272,7 @@ def analyze():
         power_svg=power_svg,
         wbal_svg=wbal_svg,
         segments=segments_data,
+        ftp=rider.ftp,
     )
 
 
@@ -377,7 +397,7 @@ def demo_ride():
     matches = count_matches_burned(ride.power_stream, rider.ftp)
     fatigue = analyze_ride_fatigue(ride)
 
-    power_svg = _generate_power_svg(ride.power_stream, width=800, height=120)
+    power_svg = _generate_power_svg(ride.power_stream, width=800, height=120, ftp=rider.ftp)
     wbal_svg = _generate_wbal_svg(wbal, rider.w_prime, width=800, height=100)
 
     # Segment matching against the Tuesday route
@@ -401,6 +421,32 @@ def demo_ride():
     except Exception:
         pass
 
+    # Load ride history for comparison
+    ride_history = []
+    try:
+        rides_dir = get_data_dir() / "rides"
+        history_file = rides_dir / "tuesday_group_ride_history.json"
+        if history_file.exists():
+            all_history = json.loads(history_file.read_text(encoding="utf-8"))
+            # Get the two most recent entries (current ride is not in history)
+            ride_history = sorted(all_history, key=lambda h: h["date"], reverse=True)
+    except Exception:
+        pass
+
+    # Build a lookup of last week's segment data
+    last_week = {}
+    best_ever = {}
+    if ride_history:
+        # Most recent history entry = last week
+        for seg in ride_history[0].get("segments", []):
+            last_week[seg["name"]] = seg
+        # Best ever from all history
+        for entry in ride_history:
+            for seg in entry.get("segments", []):
+                name = seg["name"]
+                if name not in best_ever or seg["avg_power"] > best_ever[name]["avg_power"]:
+                    best_ever[name] = {**seg, "date": entry["date"]}
+
     # Build segment data for template
     segments_data = []
     for i, sm in enumerate(segment_matches):
@@ -412,8 +458,17 @@ def demo_ride():
         if i < len(pacing_insights):
             pacing_note = pacing_insights[i].recommendation
 
+        seg_name = sm.segment.name
+        prev = last_week.get(seg_name, {})
+        best = best_ever.get(seg_name, {})
+
+        # Detect PR
+        is_pr = False
+        if best and round(sm.avg_power) > best.get("avg_power", 9999):
+            is_pr = True
+
         segments_data.append({
-            "name": sm.segment.name,
+            "name": seg_name,
             "avg_power": round(sm.avg_power),
             "max_power": round(sm.max_power),
             "np": round(sm.normalized_power),
@@ -426,6 +481,13 @@ def demo_ride():
             "power_svg": seg_power_svg,
             "pacing_note": pacing_note,
             "notes": sm.segment.notes,
+            "ftp_pct": round(sm.avg_power / rider.ftp * 100),
+            "prev_power": prev.get("avg_power"),
+            "prev_duration": prev.get("duration"),
+            "power_delta": round(sm.avg_power) - prev["avg_power"] if prev.get("avg_power") else None,
+            "time_delta": round(prev["duration"] - sm.duration_seconds, 1) if prev.get("duration") else None,
+            "is_pr": is_pr,
+            "best_power": best.get("avg_power"),
         })
 
     return render_template(
@@ -443,6 +505,7 @@ def demo_ride():
         wbal_svg=wbal_svg,
         segments=segments_data,
         is_demo=True,
+        ftp=rider.ftp,
     )
 
 

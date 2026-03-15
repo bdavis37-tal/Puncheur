@@ -1,12 +1,29 @@
 {% extends "base.html" %}
 {% set active_page = "upload" %}
 
+{% macro format_time(seconds) -%}
+{{ "%d:%02d"|format(seconds // 60, seconds % 60) }}
+{%- endmacro %}
+
+{% macro zone_color(ftp_pct) -%}
+{% if ftp_pct >= 150 %}var(--red){% elif ftp_pct >= 120 %}var(--accent){% elif ftp_pct >= 105 %}var(--yellow){% elif ftp_pct >= 90 %}var(--blue){% else %}var(--green){% endif %}
+{%- endmacro %}
+
+{% macro delta_badge(value, unit, higher_is_better) -%}
+{% if value is not none and value != 0 %}
+{% set is_good = (value > 0 and higher_is_better) or (value < 0 and not higher_is_better) %}
+<span class="delta {{ 'up' if is_good else 'down' }}">
+    {{ "+" if value > 0 else "" }}{{ "%.0f"|format(value) if value == value|int else "%.1f"|format(value) }}{{ unit }}
+</span>
+{% endif %}
+{%- endmacro %}
+
 {% block title %}Ride Analysis — {{ ride.name }} | Puncheur{% endblock %}
 
 {% block content %}
 <div class="page-header">
     <h2>{{ ride.name or "Your Ride" }}</h2>
-    <p>{{ "%.0f"|format(ride.duration_seconds / 60) }} minutes — here's how it went.</p>
+    <p>{{ format_time(ride.duration_seconds) }} ride time — here's how it went.</p>
 </div>
 
 <!-- Key Metrics -->
@@ -14,12 +31,12 @@
     <div class="metric">
         <div class="metric-value accent">{{ "%.0f"|format(ride.avg_power) }}</div>
         <div class="metric-label">Avg Power</div>
-        <div class="metric-hint">Overall average watts</div>
+        <div class="metric-hint">{{ "%.0f"|format(ride.avg_power / rider.ftp * 100) }}% of FTP</div>
     </div>
     <div class="metric">
         <div class="metric-value accent">{{ np }}</div>
         <div class="metric-label">Weighted Power</div>
-        <div class="metric-hint">Accounts for hard efforts</div>
+        <div class="metric-hint">{{ "%.0f"|format(np / rider.ftp * 100) }}% of FTP</div>
     </div>
     <div class="metric">
         <div class="metric-value blue">{{ tss }}</div>
@@ -29,27 +46,27 @@
     <div class="metric">
         <div class="metric-value">{{ intensity_factor }}</div>
         <div class="metric-label">Intensity</div>
-        <div class="metric-hint">Fraction of your FTP</div>
+        <div class="metric-hint">{% if intensity_factor > 1.0 %}Above threshold{% elif intensity_factor > 0.85 %}Hard group ride{% elif intensity_factor > 0.75 %}Tempo ride{% else %}Endurance pace{% endif %}</div>
     </div>
     <div class="metric">
         <div class="metric-value {% if wbal_min > 5000 %}green{% elif wbal_min > 1000 %}yellow{% else %}red{% endif %}">
             {{ "%.1f"|format(wbal_min / 1000) }}k
         </div>
         <div class="metric-label">Lowest Energy Reserve</div>
-        <div class="metric-hint">How deep you dug (joules)</div>
+        <div class="metric-hint">{% if wbal_min < 2000 %}You were in the red{% elif wbal_min < 5000 %}Dug deep{% else %}Plenty left{% endif %}</div>
     </div>
     <div class="metric">
         <div class="metric-value {% if matches_burned > 5 %}red{% elif matches_burned > 3 %}yellow{% else %}green{% endif %}">
             {{ matches_burned }}
         </div>
         <div class="metric-label">Matches Burned</div>
-        <div class="metric-hint">Hard efforts >30s above 120% FTP</div>
+        <div class="metric-hint">{% if matches_burned > 5 %}Heavy — recovery needed{% elif matches_burned > 3 %}Hard day{% else %}Controlled effort{% endif %}</div>
     </div>
 </div>
 
 <!-- Power Chart -->
 <div class="chart-box">
-    <div class="chart-label">Power Throughout the Ride</div>
+    <div class="chart-label">Power Throughout the Ride {% if ftp is defined and ftp %}<span style="color: var(--blue); margin-left: 1rem;">--- FTP {{ ftp }}W</span>{% endif %}</div>
     {{ power_svg | safe }}
 </div>
 
@@ -113,15 +130,25 @@
 {% if segments %}
 <h3 style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em;">Segment Breakdown</h3>
 {% for seg in segments %}
-<div class="segment-card">
+<div class="segment-card {% if seg.is_pr is defined and seg.is_pr %}segment-pr{% endif %}">
     <div class="segment-header">
-        <span class="segment-name">{{ seg.name }}</span>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span class="segment-name">{{ seg.name }}</span>
+            {% if seg.is_pr is defined and seg.is_pr %}
+            <span class="badge badge-pr">PR!</span>
+            {% endif %}
+        </div>
         <span class="segment-badge">{{ seg.gradient }}% avg</span>
     </div>
+
+    <!-- Primary metrics row -->
     <div class="segment-metrics">
         <div class="seg-metric">
-            <div class="seg-metric-value" style="color: var(--accent);">{{ seg.avg_power }}W</div>
+            <div class="seg-metric-value" style="color: {{ zone_color(seg.ftp_pct|default(100)) }};">{{ seg.avg_power }}W</div>
             <div class="seg-metric-label">Avg Power</div>
+            {% if seg.ftp_pct is defined %}
+            <div class="seg-metric-sub">{{ seg.ftp_pct }}% FTP</div>
+            {% endif %}
         </div>
         <div class="seg-metric">
             <div class="seg-metric-value">{{ seg.max_power }}W</div>
@@ -132,7 +159,7 @@
             <div class="seg-metric-label">Weighted</div>
         </div>
         <div class="seg-metric">
-            <div class="seg-metric-value">{{ seg.duration }}s</div>
+            <div class="seg-metric-value">{{ format_time(seg.duration) }}</div>
             <div class="seg-metric-label">Time</div>
         </div>
         <div class="seg-metric">
@@ -144,7 +171,7 @@
             <div class="seg-metric-label">Cadence</div>
         </div>
         <div class="seg-metric">
-            <div class="seg-metric-value" style="color: var(--blue);">{{ seg.wbal_entry }}J</div>
+            <div class="seg-metric-value" style="color: var(--blue);">{{ "%.1f"|format(seg.wbal_entry / 1000) }}k</div>
             <div class="seg-metric-label">Energy at Start</div>
         </div>
         <div class="seg-metric">
@@ -152,6 +179,20 @@
             <div class="seg-metric-label">Climbing</div>
         </div>
     </div>
+
+    <!-- vs Last Week comparison -->
+    {% if seg.prev_power is defined and seg.prev_power %}
+    <div class="comparison-bar">
+        <span class="comparison-label">vs Last Week</span>
+        <div class="comparison-stats">
+            <span>Power: {{ seg.prev_power }}W {{ delta_badge(seg.power_delta, "W", true) }}</span>
+            {% if seg.prev_duration %}
+            <span>Time: {{ format_time(seg.prev_duration|round|int) }} {{ delta_badge(seg.time_delta, "s", true) }}</span>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
     {% if seg.pacing_note is defined and seg.pacing_note %}
     <div class="tactic info">{{ seg.pacing_note }}</div>
     {% endif %}

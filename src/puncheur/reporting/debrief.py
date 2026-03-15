@@ -26,13 +26,16 @@ def _get_template_env() -> Environment:
     )
 
 
-def _generate_power_svg(power: np.ndarray, width: int = 600, height: int = 100) -> str:
+def _generate_power_svg(
+    power: np.ndarray, width: int = 600, height: int = 100, ftp: float = 0
+) -> str:
     """Generate an inline SVG power chart.
 
     Args:
         power: Array of power values.
         width: SVG width in pixels.
         height: SVG height in pixels.
+        ftp: If > 0, draws a horizontal FTP reference line.
 
     Returns:
         SVG string for embedding in HTML.
@@ -46,6 +49,9 @@ def _generate_power_svg(power: np.ndarray, width: int = 600, height: int = 100) 
         power = power[::step]
 
     max_power = max(float(np.max(power)), 1.0)
+    # Ensure FTP line is visible even if all power is above FTP
+    if ftp > 0:
+        max_power = max(max_power, ftp * 1.1)
     n = len(power)
     x_scale = width / max(n - 1, 1)
     y_scale = height / max_power
@@ -62,8 +68,20 @@ def _generate_power_svg(power: np.ndarray, width: int = 600, height: int = 100) 
     # Filled area
     area_points = f"0,{height} {points_str} {width:.1f},{height}"
 
+    # FTP reference line
+    ftp_line = ""
+    if ftp > 0:
+        ftp_y = height - (ftp * y_scale)
+        ftp_line = (
+            f'  <line x1="0" y1="{ftp_y:.1f}" x2="{width}" y2="{ftp_y:.1f}" '
+            f'stroke="#4ecdc4" stroke-width="1" stroke-dasharray="6,4" opacity="0.7"/>\n'
+            f'  <text x="{width - 4}" y="{ftp_y - 4:.1f}" fill="#4ecdc4" '
+            f'font-size="10" font-family="Inter,sans-serif" text-anchor="end" opacity="0.8">'
+            f'FTP {int(ftp)}W</text>\n'
+        )
+
     return f"""<svg viewBox="0 0 {width} {height}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:{height}px">
-  <polygon points="{area_points}" fill="rgba(255,107,53,0.3)" stroke="none"/>
+{ftp_line}  <polygon points="{area_points}" fill="rgba(255,107,53,0.3)" stroke="none"/>
   <polyline points="{points_str}" fill="none" stroke="#ff6b35" stroke-width="1.5"/>
 </svg>"""
 

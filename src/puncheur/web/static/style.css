@@ -917,16 +917,206 @@ a:hover {
 .badge-red { background: rgba(230, 57, 70, 0.15); color: var(--red); }
 .badge-blue { background: var(--blue-glow); color: var(--blue); }
 
+.badge-pr {
+    background: linear-gradient(135deg, rgba(255, 107, 53, 0.2), rgba(168, 85, 247, 0.2));
+    color: var(--accent);
+    font-weight: 700;
+    animation: pr-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes pr-glow {
+    from { box-shadow: 0 0 4px rgba(255, 107, 53, 0.3); }
+    to { box-shadow: 0 0 12px rgba(255, 107, 53, 0.5); }
+}
+
+/* ── Segment PR highlight ─────────────────────────────────────────── */
+
+.segment-pr {
+    border-color: rgba(255, 107, 53, 0.3);
+    box-shadow: 0 0 20px rgba(255, 107, 53, 0.08);
+}
+
+/* ── Comparison Bar (vs Last Week) ────────────────────────────────── */
+
+.comparison-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.6rem 1rem;
+    margin: 0.75rem 0;
+    background: var(--bg-elevated);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+}
+
+.comparison-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.comparison-stats {
+    display: flex;
+    gap: 1.5rem;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+}
+
+/* ── Delta Badges (up/down indicators) ────────────────────────────── */
+
+.delta {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 0.35rem;
+}
+
+.delta.up {
+    color: var(--green);
+    background: var(--green-glow);
+}
+
+.delta.down {
+    color: var(--red);
+    background: rgba(230, 57, 70, 0.15);
+}
+
+/* ── Segment metric sub-label (FTP%) ──────────────────────────────── */
+
+.seg-metric-sub {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    margin-top: 0.1rem;
+}
+
+/* ── Trend Indicators ─────────────────────────────────────────────── */
+
+.trend {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin-left: 0.3rem;
+}
+
+.trend.up { color: var(--green); }
+.trend.up::before { content: "↑ "; }
+.trend.down { color: var(--red); }
+.trend.down::before { content: "↓ "; }
+
+/* ── Highlighted Action Card ──────────────────────────────────────── */
+
+.action-card.highlight {
+    border-color: rgba(255, 107, 53, 0.25);
+    background: linear-gradient(135deg, var(--bg-card), rgba(255, 107, 53, 0.05));
+}
+
+.action-card.highlight:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-md), 0 0 20px rgba(255, 107, 53, 0.1);
+}
+
+.action-icon.upload { background: var(--blue-glow); }
+.action-icon.playbook { background: var(--green-glow); }
+
+/* ── Mobile Top Bar & Hamburger ───────────────────────────────────── */
+
+.mobile-bar {
+    display: none;
+}
+
+.sidebar-overlay {
+    display: none;
+}
+
 /* ── Responsive ───────────────────────────────────────────────────── */
 
 @media (max-width: 900px) {
+    .mobile-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 56px;
+        background: var(--bg-primary);
+        border-bottom: 1px solid var(--border);
+        padding: 0 1rem;
+        z-index: 200;
+    }
+
+    .mobile-logo {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: var(--accent);
+        letter-spacing: -0.03em;
+        text-decoration: none;
+    }
+
+    .hamburger {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 6px;
+    }
+
+    .hamburger span {
+        display: block;
+        width: 22px;
+        height: 2px;
+        background: var(--text-secondary);
+        border-radius: 2px;
+        transition: all var(--transition);
+    }
+
     .sidebar {
-        display: none;
+        display: flex;
+        position: fixed;
+        top: 0;
+        left: -260px;
+        width: 260px;
+        height: 100%;
+        z-index: 300;
+        transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .sidebar.open {
+        left: 0;
+    }
+
+    .sidebar-overlay {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 250;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+    }
+
+    .sidebar-overlay.visible {
+        opacity: 1;
+        pointer-events: auto;
     }
 
     .main {
         margin-left: 0;
         padding: 1.5rem;
+        padding-top: calc(56px + 1.5rem);
     }
 
     .fitness-banner {
@@ -939,6 +1129,11 @@ a:hover {
 
     .form-row {
         grid-template-columns: 1fr;
+    }
+
+    .comparison-stats {
+        flex-direction: column;
+        gap: 0.25rem;
     }
 }
 
@@ -953,5 +1148,13 @@ a:hover {
 
     .metric-value {
         font-size: 1.5rem;
+    }
+
+    .actions-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .page-header h2 {
+        font-size: 1.4rem;
     }
 }

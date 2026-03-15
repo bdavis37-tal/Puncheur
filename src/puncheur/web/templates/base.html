@@ -12,10 +12,19 @@
 <body>
     <div class="shell">
         {% block sidebar %}
-        <nav class="sidebar">
+        <!-- Mobile top bar -->
+        <div class="mobile-bar">
+            <button class="hamburger" id="menu-toggle" aria-label="Toggle menu">
+                <span></span><span></span><span></span>
+            </button>
+            <a href="{{ url_for('index') }}" class="mobile-logo">Puncheur</a>
+        </div>
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+        <nav class="sidebar" id="sidebar">
             <div class="sidebar-logo">
                 <h1>Puncheur</h1>
-                <span>Your Ride. Your Hills.</span>
+                <span>Own the group ride.</span>
             </div>
             <div class="sidebar-nav">
                 <div class="nav-section">
@@ -40,7 +49,7 @@
                     <div class="nav-label">Routes</div>
                     {% for route in sidebar_routes|default([]) %}
                     <a href="{{ url_for('playbook', route_slug=route.slug) }}" class="nav-item">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 20l-5.447-2.724A1 1 0 0 1 3 16.382V5.618a1 1 0 0 1 1.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0 0 21 18.382V7.618a1 1 0 0 0-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
                         {{ route.name }}
                     </a>
                     {% endfor %}
@@ -68,6 +77,25 @@
         </main>
     </div>
 
+    <script>
+    (function() {
+        var toggle = document.getElementById('menu-toggle');
+        var sidebar = document.getElementById('sidebar');
+        var overlay = document.getElementById('sidebar-overlay');
+        if (toggle && sidebar && overlay) {
+            function open() { sidebar.classList.add('open'); overlay.classList.add('visible'); }
+            function close() { sidebar.classList.remove('open'); overlay.classList.remove('visible'); }
+            toggle.addEventListener('click', function() {
+                sidebar.classList.contains('open') ? close() : open();
+            });
+            overlay.addEventListener('click', close);
+            // Close on nav click (mobile)
+            sidebar.querySelectorAll('.nav-item').forEach(function(item) {
+                item.addEventListener('click', close);
+            });
+        }
+    })();
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

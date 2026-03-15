@@ -6,8 +6,8 @@
 
 {% block content %}
 <div class="page-header">
-    <h2>Hey {{ rider.name }} 👋</h2>
-    <p>Here's where you stand.</p>
+    <h2>Hey {{ rider.name }}</h2>
+    <p>{% if fitness.tsb > 5 %}You're fresh. Time to race.{% elif fitness.tsb > -5 %}Balanced form. Good to go hard.{% elif fitness.tsb > -15 %}You've been putting in work. It's paying off.{% else %}Heavy block. Trust the process.{% endif %}</p>
 </div>
 
 <!-- Fitness Banner -->
@@ -18,8 +18,14 @@
         </div>
         <div class="fitness-meta">
             <div class="fitness-value" style="color: var(--blue);">{{ "%.0f"|format(fitness.ctl) }}</div>
-            <div class="fitness-label">Fitness</div>
-            <div class="fitness-desc">Training load over 6 weeks</div>
+            <div class="fitness-label">Fitness
+                {% if fitness_trend is defined and fitness_trend.ctl_delta != 0 %}
+                <span class="trend {{ 'up' if fitness_trend.ctl_delta > 0 else 'down' }}">
+                    {{ "+" if fitness_trend.ctl_delta > 0 else "" }}{{ fitness_trend.ctl_delta }}
+                </span>
+                {% endif %}
+            </div>
+            <div class="fitness-desc">{% if fitness_trend is defined and fitness_trend.ctl_delta > 1 %}Trending up this week{% elif fitness_trend is defined and fitness_trend.ctl_delta < -1 %}Dipping — rest week?{% else %}Holding steady{% endif %}</div>
         </div>
     </div>
     <div class="fitness-card">
@@ -29,7 +35,7 @@
         <div class="fitness-meta">
             <div class="fitness-value" style="color: var(--accent);">{{ "%.0f"|format(fitness.atl) }}</div>
             <div class="fitness-label">Fatigue</div>
-            <div class="fitness-desc">Training load this week</div>
+            <div class="fitness-desc">{% if week_rides is defined %}{{ week_rides }} ride{{ 's' if week_rides != 1 else '' }} this week · {{ week_tss }} TSS{% else %}Training load this week{% endif %}</div>
         </div>
     </div>
     <div class="fitness-card">
@@ -43,11 +49,11 @@
             </div>
             <div class="fitness-label">Form</div>
             <div class="fitness-desc">
-                {% if tsb > 15 %}Very fresh — race ready
-                {% elif tsb > 5 %}Fresh — good to go
-                {% elif tsb > -5 %}Balanced — normal training
-                {% elif tsb > -15 %}Fatigued — building fitness
-                {% else %}Deep fatigue — recovery needed
+                {% if tsb > 15 %}Peak form — race day
+                {% elif tsb > 5 %}Fresh — attack something
+                {% elif tsb > -5 %}Balanced — race or train
+                {% elif tsb > -15 %}Absorbing load — getting faster
+                {% else %}Deep hole — recovery needed
                 {% endif %}
             </div>
         </div>
@@ -57,36 +63,36 @@
 <!-- Quick Actions -->
 <div class="actions-grid">
     {% if demo_ride_available is defined and demo_ride_available %}
-    <a href="{{ url_for('demo_ride') }}" class="action-card">
+    <a href="{{ url_for('demo_ride') }}" class="action-card highlight">
         <div class="action-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff6b35" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
         </div>
-        <h3>Last Ride: Tuesday Group</h3>
-        <p>Tap to see your full post-ride analysis with segment breakdown and pacing insights.</p>
+        <h3>Tuesday Group Ride</h3>
+        <p>See how you did on every segment — power, time, and how it compares to last week.</p>
     </a>
     {% endif %}
     <a href="{{ url_for('upload') }}" class="action-card">
-        <div class="action-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff6b35" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <div class="action-icon upload">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4ecdc4" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         </div>
         <h3>Upload a Ride</h3>
-        <p>Drop a .fit file from your Garmin, Wahoo, or Hammerhead for instant post-ride insights.</p>
+        <p>Drop a .fit file for instant power analysis, energy tracking, and segment matching.</p>
     </a>
     {% if routes %}
     <a href="{{ url_for('playbook', route_slug=routes[0].slug) }}" class="action-card">
-        <div class="action-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4ecdc4" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <div class="action-icon playbook">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#06d6a0" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         </div>
-        <h3>Pre-Ride Playbook</h3>
-        <p>Get pacing targets and tactics for {{ routes[0].name }}. Know the plan before you clip in.</p>
+        <h3>Next Tuesday's Plan</h3>
+        <p>Power targets and tactics for {{ routes[0].name }}. Know the plan before you clip in.</p>
     </a>
     {% endif %}
     <a href="{{ url_for('kom') }}" class="action-card">
         <div class="action-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#06d6a0" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
         </div>
-        <h3>KOM Attempt</h3>
-        <p>Plan a segment attack with target power, pacing splits, and a warm-up protocol.</p>
+        <h3>KOM Planner</h3>
+        <p>Pick a segment. Get target power, pacing splits, and a warm-up protocol.</p>
     </a>
 </div>
 
@@ -128,10 +134,10 @@
         <div class="metric">
             <div class="metric-value blue">{{ "%.1f"|format(rider.w_per_kg) }}</div>
             <div class="metric-label">W/kg</div>
-            <div class="metric-hint">Power to weight</div>
+            <div class="metric-hint">{% if rider.w_per_kg >= 4.0 %}Strong climber{% elif rider.w_per_kg >= 3.0 %}Competitive{% else %}Building{% endif %}</div>
         </div>
         <div class="metric">
-            <div class="metric-value green">{{ rider.w_prime }}</div>
+            <div class="metric-value green">{{ "%.1f"|format(rider.w_prime / 1000) }}k</div>
             <div class="metric-label">W' (joules)</div>
             <div class="metric-hint">Your anaerobic tank</div>
         </div>
