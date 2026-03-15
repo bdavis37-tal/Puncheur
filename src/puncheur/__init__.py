@@ -1,7 +1,8 @@
-"""Puncheur — Your Ride. Your Hills. Your Playbook.
+"""Puncheur — Own the group ride.
 
-An opinionated post-ride analysis and pre-ride strategy tool built for
-competitive road cyclists who train for specific group rides and KOM attempts.
+Post-ride analysis and pre-ride strategy for competitive road cyclists.
+Knows your route, tracks your segments week over week, and tells you
+exactly what power to hold on every climb next Tuesday.
 """
 
 __version__ = "0.1.0"

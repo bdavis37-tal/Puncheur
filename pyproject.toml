@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "puncheur"
 version = "0.1.0"
-description = "Your Ride. Your Hills. Your Playbook. Post-ride analysis and pre-ride strategy for competitive road cyclists."
+description = "Own the group ride. Post-ride analysis and pre-ride strategy for competitive road cyclists."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
