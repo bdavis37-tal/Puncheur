@@ -48,24 +48,36 @@ def main(
     port: int = typer.Option(5050, "--port", "-p", help="Port for the web UI."),
     no_browser: bool = typer.Option(False, "--no-browser", help="Don't open the browser."),
     cli_mode: bool = typer.Option(False, "--cli", help="Use CLI mode instead of web UI."),
+    demo: bool = typer.Option(False, "--demo", help="Launch with demo data (265W FTP, Charlotte route)."),
 ) -> None:
     """Puncheur — Your Ride. Your Hills. Your Playbook.
 
     Run without arguments to launch the web UI in your browser.
+    Use --demo to launch with pre-loaded sample data.
     Use --cli for the traditional command-line interface.
     """
     if ctx.invoked_subcommand is None and not cli_mode:
         # Default action: launch the web UI
         from puncheur.web.app import run_app
 
-        console.print(
-            Panel(
-                f"[bold]Puncheur[/bold] is running at [link=http://127.0.0.1:{port}]http://127.0.0.1:{port}[/link]\n"
-                f"Press Ctrl+C to stop.",
-                style="bold orange1",
+        if demo:
+            console.print(
+                Panel(
+                    f"[bold]Puncheur Demo[/bold] is running at [link=http://127.0.0.1:{port}]http://127.0.0.1:{port}[/link]\n"
+                    f"Pre-loaded: Brendan, 265W FTP, Tuesday Group Ride\n"
+                    f"Press Ctrl+C to stop.",
+                    style="bold orange1",
+                )
             )
-        )
-        run_app(port=port, open_browser=not no_browser)
+        else:
+            console.print(
+                Panel(
+                    f"[bold]Puncheur[/bold] is running at [link=http://127.0.0.1:{port}]http://127.0.0.1:{port}[/link]\n"
+                    f"Press Ctrl+C to stop.",
+                    style="bold orange1",
+                )
+            )
+        run_app(port=port, open_browser=not no_browser, demo=demo)
 
 
 # ── Init ──────────────────────────────────────────────────────────────

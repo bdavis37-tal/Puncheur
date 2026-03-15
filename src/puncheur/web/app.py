@@ -73,6 +73,7 @@ def index():
 
     # Load fitness data
     from puncheur.analytics.fitness import compute_fitness
+    from puncheur.demo import is_demo_available
 
     fitness = compute_fitness()
 
@@ -81,6 +82,7 @@ def index():
         rider=rider,
         routes=routes,
         fitness=fitness,
+        demo_ride_available=is_demo_available(),
     )
 
 
@@ -337,6 +339,113 @@ def settings():
     return render_template("settings.html", rider=rider)
 
 
+@app.route("/demo")
+def demo_setup():
+    """Set up demo mode with pre-loaded data and redirect to dashboard."""
+    from puncheur.demo import setup_demo
+
+    setup_demo()
+    flash("Demo loaded — meet Brendan, 265W FTP, south Charlotte group rider.")
+    return redirect(url_for("index"))
+
+
+@app.route("/demo/ride")
+def demo_ride():
+    """Analyze the pre-loaded demo ride."""
+    from puncheur.demo import is_demo_available, load_demo_ride
+
+    if not is_demo_available():
+        return redirect(url_for("demo_setup"))
+
+    rider = _load_rider()
+    ride = load_demo_ride()
+
+    from puncheur.analytics.fatigue import analyze_ride_fatigue
+    from puncheur.analytics.matchbook import compute_wbal, count_matches_burned
+    from puncheur.analytics.pacing import analyze_pre_segment_pacing
+    from puncheur.analytics.power_curve import duration_buckets, power_duration_curve
+    from puncheur.analytics.segment_matcher import match_segments
+    from puncheur.models.ride_profile import RideProfile
+    from puncheur.reporting.debrief import _generate_power_svg, _generate_wbal_svg
+
+    pdc = power_duration_curve(ride)
+    benchmarks = duration_buckets(pdc)
+    np_val = ride.normalized_power()
+    tss = ride.tss(rider.ftp)
+    if_val = ride.intensity_factor(rider.ftp)
+    wbal = compute_wbal(ride.power_stream, rider.ftp, rider.w_prime)
+    matches = count_matches_burned(ride.power_stream, rider.ftp)
+    fatigue = analyze_ride_fatigue(ride)
+
+    power_svg = _generate_power_svg(ride.power_stream, width=800, height=120)
+    wbal_svg = _generate_wbal_svg(wbal, rider.w_prime, width=800, height=100)
+
+    # Segment matching against the Tuesday route
+    segment_matches = []
+    pacing_insights = []
+    try:
+        profile = RideProfile.load("tuesday_group_ride")
+        segment_matches = match_segments(ride, profile, tolerance_m=80)
+
+        # Compute W'bal at each segment entry
+        for sm in segment_matches:
+            # Find the index in the ride closest to this segment's start
+            for idx, pt in enumerate(ride.points):
+                if pt.timestamp >= sm.start_time:
+                    sm.wbal_at_entry = float(wbal[idx]) if idx < len(wbal) else 0.0
+                    break
+
+            # Pacing analysis
+            pa = analyze_pre_segment_pacing(sm, ride.avg_power, rider)
+            pacing_insights.append(pa)
+    except Exception:
+        pass
+
+    # Build segment data for template
+    segments_data = []
+    for i, sm in enumerate(segment_matches):
+        seg_power_svg = ""
+        if sm.ride_data:
+            seg_power_svg = _generate_power_svg(sm.ride_data.power_stream, width=600, height=80)
+
+        pacing_note = ""
+        if i < len(pacing_insights):
+            pacing_note = pacing_insights[i].recommendation
+
+        segments_data.append({
+            "name": sm.segment.name,
+            "avg_power": round(sm.avg_power),
+            "max_power": round(sm.max_power),
+            "np": round(sm.normalized_power),
+            "duration": round(sm.duration_seconds),
+            "avg_hr": round(sm.avg_heart_rate),
+            "avg_cadence": round(sm.avg_cadence),
+            "wbal_entry": round(sm.wbal_at_entry),
+            "gradient": sm.segment.avg_gradient_pct,
+            "elevation_gain": round(sm.elevation_gain, 1),
+            "power_svg": seg_power_svg,
+            "pacing_note": pacing_note,
+            "notes": sm.segment.notes,
+        })
+
+    return render_template(
+        "analyze.html",
+        ride=ride,
+        rider=rider,
+        np=round(np_val),
+        tss=round(tss),
+        intensity_factor=round(if_val, 2),
+        wbal_min=round(float(np.min(wbal))) if len(wbal) > 0 else 0,
+        matches_burned=matches,
+        benchmarks=benchmarks,
+        fatigue=fatigue,
+        power_svg=power_svg,
+        wbal_svg=wbal_svg,
+        segments=segments_data,
+        is_demo=True,
+    )
+
+
 @app.route("/api/fitness")
 def api_fitness():
     """JSON API for fitness data (for AJAX updates)."""
@@ -345,15 +454,30 @@ def api_fitness():
     return jsonify(compute_fitness())
 
 
-def run_app(host: str = "127.0.0.1", port: int = 5050, open_browser: bool = True) -> None:
+def run_app(
+    host: str = "127.0.0.1",
+    port: int = 5050,
+    open_browser: bool = True,
+    demo: bool = False,
+) -> None:
     """Launch the Puncheur web app.
 
     Args:
         host: Host to bind to.
         port: Port to run on.
         open_browser: Whether to automatically open the browser.
+        demo: Whether to set up demo data and open demo ride automatically.
     """
+    if demo:
+        from puncheur.demo import setup_demo
+
+        setup_demo()
+
+        url = f"http://{host}:{port}/demo/ride"
+    else:
+        url = f"http://{host}:{port}"
+
     if open_browser:
-        Timer(1.0, lambda: webbrowser.open(f"http://{host}:{port}")).start()
+        Timer(1.0, lambda: webbrowser.open(url)).start()
 
     app.run(host=host, port=port, debug=False)

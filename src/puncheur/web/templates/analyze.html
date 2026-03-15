@@ -152,6 +152,12 @@
             <div class="seg-metric-label">Climbing</div>
         </div>
     </div>
+    {% if seg.pacing_note is defined and seg.pacing_note %}
+    <div class="tactic info">{{ seg.pacing_note }}</div>
+    {% endif %}
+    {% if seg.notes is defined and seg.notes %}
+    <div class="tactic" style="font-size: 0.85rem; opacity: 0.8;">{{ seg.notes }}</div>
+    {% endif %}
     {% if seg.power_svg %}
     <div class="segment-chart">
         {{ seg.power_svg | safe }}
@@ -162,6 +168,11 @@
 {% endif %}
 
 <div style="margin-top: 2rem; text-align: center;">
+    {% if is_demo is defined and is_demo %}
+    <a href="{{ url_for('playbook', route_slug='tuesday_group_ride') }}" class="btn btn-primary" style="margin-right: 0.5rem;">View Playbook for Next Week</a>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary">Back to Dashboard</a>
+    {% else %}
     <a href="{{ url_for('upload') }}" class="btn btn-secondary">Analyze Another Ride</a>
+    {% endif %}
 </div>
 {% endblock %}

@@ -56,12 +56,21 @@
 
 <!-- Quick Actions -->
 <div class="actions-grid">
+    {% if demo_ride_available is defined and demo_ride_available %}
+    <a href="{{ url_for('demo_ride') }}" class="action-card">
+        <div class="action-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff6b35" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <h3>Last Ride: Tuesday Group</h3>
+        <p>Tap to see your full post-ride analysis with segment breakdown and pacing insights.</p>
+    </a>
+    {% endif %}
     <a href="{{ url_for('upload') }}" class="action-card">
         <div class="action-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff6b35" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         </div>
-        <h3>Analyze a Ride</h3>
-        <p>Upload a .fit file from your Garmin, Wahoo, or Hammerhead for instant post-ride insights.</p>
+        <h3>Upload a Ride</h3>
+        <p>Drop a .fit file from your Garmin, Wahoo, or Hammerhead for instant post-ride insights.</p>
     </a>
     {% if routes %}
     <a href="{{ url_for('playbook', route_slug=routes[0].slug) }}" class="action-card">
