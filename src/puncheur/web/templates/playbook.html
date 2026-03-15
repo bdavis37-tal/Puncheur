@@ -1,16 +1,33 @@
 {% extends "base.html" %}
 {% set active_page = "playbook" %}
 
+{% macro format_time(seconds) -%}
+{{ "%d:%02d"|format(seconds // 60, seconds % 60) }}
+{%- endmacro %}
+
 {% block title %}Playbook — {{ route.name }} | Puncheur{% endblock %}
 
 {% block content %}
 <div class="page-header">
     <h2>{{ route.name }}</h2>
-    <p>Your game plan for race day. {{ route.segments|length }} segments to manage.</p>
+    <p>{{ route.segments|length }} segments.
+    {% if playbook.has_history is defined and playbook.has_history %}Targets based on your actual data.{% else %}Generic targets — ride it once to unlock personalized targets.{% endif %}</p>
 </div>
 
-<!-- Rider Status -->
+<!-- Race Readiness + Fitness -->
 <div class="fitness-banner">
+    {% if playbook.race_readiness is defined %}
+    <div class="fitness-card" style="border-color: {% if playbook.race_readiness.score >= 65 %}rgba(6,214,160,0.3){% elif playbook.race_readiness.score >= 40 %}rgba(249,199,79,0.3){% else %}rgba(230,57,70,0.3){% endif %};">
+        <div class="fitness-icon form">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{% if playbook.race_readiness.score >= 65 %}#06d6a0{% elif playbook.race_readiness.score >= 40 %}#f9c74f{% else %}#e63946{% endif %}" stroke-width="2"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+        </div>
+        <div class="fitness-meta">
+            <div class="fitness-value" style="color: {% if playbook.race_readiness.score >= 65 %}var(--green){% elif playbook.race_readiness.score >= 40 %}var(--yellow){% else %}var(--red){% endif %};">{{ "%.0f"|format(playbook.race_readiness.score) }}</div>
+            <div class="fitness-label">Race Readiness</div>
+            <div class="fitness-desc">{{ playbook.race_readiness.label }}</div>
+        </div>
+    </div>
+    {% endif %}
     <div class="fitness-card">
         <div class="fitness-icon fit">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4ecdc4" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
@@ -21,20 +38,14 @@
         </div>
     </div>
     <div class="fitness-card">
-        <div class="fitness-icon fatigue">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6b35" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
-        </div>
-        <div class="fitness-meta">
-            <div class="fitness-value" style="color: var(--accent);">{{ playbook.fitness.atl }}</div>
-            <div class="fitness-label">Fatigue</div>
-        </div>
-    </div>
-    <div class="fitness-card">
         <div class="fitness-icon form">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#06d6a0" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
         </div>
         <div class="fitness-meta">
-            <div class="fitness-value" style="color: var(--green);">{{ playbook.fitness.tsb }}</div>
+            {% set tsb = playbook.fitness.tsb %}
+            <div class="fitness-value" style="color: {% if tsb > 5 %}var(--green){% elif tsb > -10 %}var(--yellow){% else %}var(--red){% endif %};">
+                {% if tsb > 0 %}+{% endif %}{{ "%.0f"|format(tsb) }}
+            </div>
             <div class="fitness-label">Form</div>
         </div>
     </div>
@@ -54,21 +65,14 @@
     </div>
 
     <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">
-        Your anaerobic tank holds <strong style="color: var(--text-primary);">{{ playbook.match_budget.w_prime }}J</strong>.
-        This ride is estimated to cost <strong style="color: var(--text-primary);">{{ playbook.match_budget.total_estimated_cost }}J</strong>
-        — that's <strong style="color: {% if playbook.match_budget.budget_pct < 70 %}var(--green){% elif playbook.match_budget.budget_pct < 90 %}var(--yellow){% else %}var(--red){% endif %};">{{ playbook.match_budget.budget_pct }}%</strong> of your capacity.
+        Your anaerobic tank holds <strong style="color: var(--text-primary);">{{ "%.1f"|format(playbook.match_budget.w_prime / 1000) }}kJ</strong>.
+        This ride costs <strong style="color: var(--text-primary);">{{ "%.1f"|format(playbook.match_budget.total_estimated_cost / 1000) }}kJ</strong>
+        — <strong style="color: {% if playbook.match_budget.budget_pct < 70 %}var(--green){% elif playbook.match_budget.budget_pct < 90 %}var(--yellow){% else %}var(--red){% endif %};">{{ "%.0f"|format(playbook.match_budget.budget_pct) }}%</strong> of capacity.
     </p>
 
-    <!-- Budget bar -->
     {% set pct = playbook.match_budget.budget_pct %}
     <div style="background: var(--bg-elevated); border-radius: 8px; height: 28px; overflow: hidden; position: relative;">
-        <div style="
-            height: 100%;
-            width: {{ [pct, 100]|min }}%;
-            background: {% if pct < 70 %}var(--green){% elif pct < 90 %}var(--yellow){% else %}var(--red){% endif %};
-            border-radius: 8px;
-            transition: width 0.5s ease;
-        "></div>
+        <div style="height: 100%; width: {{ [pct, 100]|min }}%; background: {% if pct < 70 %}var(--green){% elif pct < 90 %}var(--yellow){% else %}var(--red){% endif %}; border-radius: 8px; transition: width 0.5s ease;"></div>
         <span style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 0.8rem; font-weight: 600;">
             {{ "%.0f"|format(pct) }}%
         </span>
@@ -81,24 +85,47 @@
 {% for seg in playbook.segments %}
 <div class="segment-card">
     <div class="segment-header">
-        <span class="segment-name">{{ seg.name }}</span>
-        <span class="segment-badge">{{ seg.gradient }}% · ~{{ seg.estimated_duration }}s</span>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span class="segment-name">{{ seg.name }}</span>
+            {% if seg.data_driven is defined and seg.data_driven %}
+            <span class="badge badge-blue" style="font-size: 0.6rem;">From your data</span>
+            {% endif %}
+        </div>
+        <span class="segment-badge">{{ seg.gradient }}% · ~{{ format_time(seg.estimated_duration) }}</span>
     </div>
 
     <div class="segment-metrics">
         <div class="seg-metric">
             <div class="seg-metric-value" style="color: var(--accent);">{{ seg.target_power }}W</div>
             <div class="seg-metric-label">Target Power</div>
+            {% if seg.best_power is defined and seg.best_power %}
+            <div class="seg-metric-sub">Best: {{ seg.best_power|round|int }}W</div>
+            {% endif %}
         </div>
         <div class="seg-metric">
-            <div class="seg-metric-value" style="color: var(--blue);">{{ seg.w_cost }}J</div>
+            <div class="seg-metric-value" style="color: var(--blue);">{{ "%.1f"|format(seg.w_cost / 1000) }}kJ</div>
             <div class="seg-metric-label">Energy Cost</div>
         </div>
         <div class="seg-metric">
             <div class="seg-metric-value" style="color: var(--green);">{{ seg.pre_climb_target }}W</div>
             <div class="seg-metric-label">Approach Power</div>
         </div>
+        {% if seg.trend_rate is defined and seg.weeks_of_data >= 3 %}
+        <div class="seg-metric">
+            <div class="seg-metric-value" style="color: {% if seg.trend_rate > 0.5 %}var(--green){% elif seg.trend_rate < -0.5 %}var(--red){% else %}var(--text-secondary){% endif %};">
+                {% if seg.trend_rate > 0 %}+{% endif %}{{ "%.1f"|format(seg.trend_rate) }}
+            </div>
+            <div class="seg-metric-label">W/week trend</div>
+        </div>
+        {% endif %}
     </div>
+
+    {% if seg.trend is defined and seg.trend %}
+    <div class="comparison-bar">
+        <span class="comparison-label">Trend</span>
+        <span style="color: var(--text-secondary); font-size: 0.85rem;">{{ seg.trend }}</span>
+    </div>
+    {% endif %}
 
     <div class="tactic">{{ seg.tactic }}</div>
     {% if seg.notes %}

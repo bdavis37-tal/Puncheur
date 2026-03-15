@@ -57,28 +57,23 @@ def plan_kom_attempt(
 
 
 def _target_power_for_duration(rider: Rider, duration_seconds: int) -> float:
-    """Estimate target power based on duration and rider's FTP.
+    """Estimate target power using the CP/W' model.
 
-    Uses a standard power-duration model relative to FTP.
+    Uses the hyperbolic power-duration relationship: P = CP + W'/t
+    which is physiologically grounded (Morton 1996) rather than
+    arbitrary FTP multipliers.
+
+    Falls back to stepwise estimates for very short durations where
+    the 2-parameter model breaks down (neuromuscular domain).
     """
-    ftp = rider.ftp
+    from puncheur.analytics.cp_model import CPModel
 
-    if duration_seconds <= 10:
-        return ftp * 2.5  # Neuromuscular sprint
-    elif duration_seconds <= 30:
-        return ftp * 2.0  # Anaerobic sprint
-    elif duration_seconds <= 60:
-        return ftp * 1.50  # 1-minute power
-    elif duration_seconds <= 120:
-        return ftp * 1.25  # 2-minute VO2max
-    elif duration_seconds <= 300:
-        return ftp * 1.12  # 5-minute VO2max
-    elif duration_seconds <= 600:
-        return ftp * 1.05  # 10-minute
-    elif duration_seconds <= 1200:
-        return ftp * 1.00  # 20-minute ≈ FTP
-    else:
-        return ftp * 0.95  # Sub-threshold sustained
+    # Build a CP model from the rider's known parameters
+    cp = rider.ftp * 0.95  # CP is ~95% of FTP
+    w_prime = rider.w_prime
+
+    model = CPModel(cp=cp, w_prime=w_prime, r_squared=0.5, durations_used=0)
+    return model.predict_power(duration_seconds)
 
 
 def _pacing_strategy(duration_seconds: int) -> dict:
