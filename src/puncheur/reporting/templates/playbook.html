@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Pre-Ride Playbook — {{ route }} | Puncheur{% endblock %}
+{% block content %}
+<h1>Pre-Ride Playbook</h1>
+<p class="subtitle">{{ route }}</p>
+
+<div class="metrics">
+    <div class="metric-card">
+        <div class="metric-value">{{ rider_ftp }}</div>
+        <div class="metric-label">FTP (W)</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-value">{{ rider_wpkg }}</div>
+        <div class="metric-label">W/kg</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-value blue">{{ fitness.ctl }}</div>
+        <div class="metric-label">CTL (Fitness)</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-value">{{ fitness.atl }}</div>
+        <div class="metric-label">ATL (Fatigue)</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-value green">{{ fitness.tsb }}</div>
+        <div class="metric-label">TSB (Form)</div>
+    </div>
+</div>
+
+<h2>Match Budget</h2>
+<div class="budget-bar">
+    {{ budget_svg | safe }}
+</div>
+<p style="color: var(--text-secondary); font-size: 0.9rem;">
+    W' capacity: {{ match_budget.w_prime }}J | Estimated cost: {{ match_budget.total_estimated_cost }}J | Status: <strong>{{ match_budget.status }}</strong>
+</p>
+
+<h2>Segment Targets</h2>
+{% for seg in segments %}
+<div class="segment-card">
+    <div class="segment-header">
+        <span class="segment-name">{{ seg.name }}</span>
+        <span class="segment-grade">{{ seg.gradient }}% | ~{{ seg.estimated_duration }}s</span>
+    </div>
+    <div class="segment-metrics">
+        <div class="segment-metric">
+            <div class="segment-metric-value">{{ seg.target_power }}W</div>
+            <div class="segment-metric-label">Target Power</div>
+        </div>
+        <div class="segment-metric">
+            <div class="segment-metric-value">{{ seg.w_cost }}J</div>
+            <div class="segment-metric-label">Est. W' Cost</div>
+        </div>
+        <div class="segment-metric">
+            <div class="segment-metric-value">{{ seg.pre_climb_target }}W</div>
+            <div class="segment-metric-label">Approach Target</div>
+        </div>
+    </div>
+    <div class="tactic">{{ seg.tactic }}</div>
+    {% if seg.notes %}
+    <div class="tactic info">{{ seg.notes }}</div>
+    {% endif %}
+</div>
+{% endfor %}
+
+{% if pre_ride_notes %}
+<h2>Pre-Ride Notes</h2>
+{% for note in pre_ride_notes %}
+<div class="tactic info">{{ note }}</div>
+{% endfor %}
+{% endif %}
+{% endblock %}

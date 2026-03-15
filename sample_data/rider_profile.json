@@ -1,0 +1,16 @@
+{
+  "name": "Brendan",
+  "ftp": 280,
+  "weight_kg": 79.0,
+  "power_zones": {
+    "z1_recovery": [0, 152],
+    "z2_endurance": [153, 208],
+    "z3_tempo": [209, 250],
+    "z4_threshold": [251, 280],
+    "z5_vo2max": [281, 336],
+    "z6_anaerobic": [337, 392],
+    "z7_neuromuscular": [393, 9999]
+  },
+  "max_heart_rate": 185,
+  "w_prime": 20000
+}

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Puncheur" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Tuesday Group Ride</name>
+    <desc>Charlotte area group ride with three key climbs</desc>
+  </metadata>
+  <trk>
+    <name>Tuesday Group Ride</name>
+    <trkseg>
+      <!-- Start: Ballantyne area -->
+      <trkpt lat="35.1200" lon="-80.8800"><ele>200</ele></trkpt>
+      <trkpt lat="35.1210" lon="-80.8790"><ele>202</ele></trkpt>
+      <trkpt lat="35.1220" lon="-80.8780"><ele>205</ele></trkpt>
+      <!-- Approach to Hill 1 -->
+      <trkpt lat="35.1230" lon="-80.8770"><ele>208</ele></trkpt>
+      <trkpt lat="35.1234" lon="-80.8765"><ele>210</ele></trkpt>
+      <!-- Hill 1: Rea Road Kicker -->
+      <trkpt lat="35.1240" lon="-80.8760"><ele>218</ele></trkpt>
+      <trkpt lat="35.1245" lon="-80.8755"><ele>225</ele></trkpt>
+      <trkpt lat="35.1250" lon="-80.8748"><ele>235</ele></trkpt>
+      <trkpt lat="35.1256" lon="-80.8743"><ele>240</ele></trkpt>
+      <!-- Recovery section -->
+      <trkpt lat="35.1265" lon="-80.8720"><ele>235</ele></trkpt>
+      <trkpt lat="35.1275" lon="-80.8690"><ele>225</ele></trkpt>
+      <trkpt lat="35.1285" lon="-80.8650"><ele>215</ele></trkpt>
+      <trkpt lat="35.1295" lon="-80.8620"><ele>208</ele></trkpt>
+      <!-- Approach to Hill 2 -->
+      <trkpt lat="35.1300" lon="-80.8600"><ele>210</ele></trkpt>
+      <!-- Hill 2: Sardis Lane -->
+      <trkpt lat="35.1305" lon="-80.8595"><ele>215</ele></trkpt>
+      <trkpt lat="35.1310" lon="-80.8592"><ele>222</ele></trkpt>
+      <trkpt lat="35.1318" lon="-80.8588"><ele>232</ele></trkpt>
+      <trkpt lat="35.1325" lon="-80.8584"><ele>242</ele></trkpt>
+      <trkpt lat="35.1330" lon="-80.8580"><ele>250</ele></trkpt>
+      <!-- Recovery section -->
+      <trkpt lat="35.1340" lon="-80.8565"><ele>245</ele></trkpt>
+      <trkpt lat="35.1355" lon="-80.8545"><ele>235</ele></trkpt>
+      <trkpt lat="35.1370" lon="-80.8525"><ele>220</ele></trkpt>
+      <trkpt lat="35.1385" lon="-80.8510"><ele>210</ele></trkpt>
+      <!-- Approach to Hill 3 -->
+      <trkpt lat="35.1400" lon="-80.8500"><ele>205</ele></trkpt>
+      <!-- Hill 3: Providence Road Wall -->
+      <trkpt lat="35.1405" lon="-80.8496"><ele>218</ele></trkpt>
+      <trkpt lat="35.1408" lon="-80.8492"><ele>232</ele></trkpt>
+      <trkpt lat="35.1412" lon="-80.8488"><ele>248</ele></trkpt>
+      <trkpt lat="35.1415" lon="-80.8485"><ele>260</ele></trkpt>
+      <!-- Cool down back -->
+      <trkpt lat="35.1410" lon="-80.8500"><ele>250</ele></trkpt>
+      <trkpt lat="35.1380" lon="-80.8600"><ele>230</ele></trkpt>
+      <trkpt lat="35.1300" lon="-80.8700"><ele>215</ele></trkpt>
+      <trkpt lat="35.1200" lon="-80.8800"><ele>200</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

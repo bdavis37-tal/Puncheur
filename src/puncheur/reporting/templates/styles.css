@@ -1,0 +1,272 @@
+/* Puncheur Report Styles
+   Dark theme — cycling computer meets Bloomberg terminal.
+   Data-dense but not cluttered. Every number should mean something. */
+
+:root {
+    --bg-primary: #1a1a2e;
+    --bg-secondary: #16213e;
+    --bg-card: #0f3460;
+    --text-primary: #e0e0e0;
+    --text-secondary: #a0a0b0;
+    --text-dim: #6b6b80;
+    --accent-orange: #ff6b35;
+    --accent-blue: #4ecdc4;
+    --accent-yellow: #f9c74f;
+    --accent-red: #e63946;
+    --accent-green: #06d6a0;
+    --border: #2a2a3e;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-mono: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.6;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+}
+
+h1 {
+    font-size: 1.8rem;
+    color: var(--accent-orange);
+    margin-bottom: 0.25rem;
+    letter-spacing: -0.02em;
+}
+
+h2 {
+    font-size: 1.2rem;
+    color: var(--text-primary);
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+h3 {
+    font-size: 1rem;
+    color: var(--accent-blue);
+    margin-bottom: 0.5rem;
+}
+
+.subtitle {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+}
+
+/* Metric cards */
+.metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.metric-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.metric-value {
+    font-family: var(--font-mono);
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--accent-orange);
+    line-height: 1.2;
+}
+
+.metric-value.blue {
+    color: var(--accent-blue);
+}
+
+.metric-value.green {
+    color: var(--accent-green);
+}
+
+.metric-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 0.25rem;
+}
+
+/* Segment cards */
+.segment-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.segment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.75rem;
+}
+
+.segment-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--accent-orange);
+}
+
+.segment-grade {
+    font-family: var(--font-mono);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.segment-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.segment-metric {
+    text-align: center;
+}
+
+.segment-metric-value {
+    font-family: var(--font-mono);
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.segment-metric-label {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+}
+
+.segment-chart {
+    margin-top: 0.75rem;
+    border-top: 1px solid var(--border);
+    padding-top: 0.75rem;
+}
+
+/* Charts */
+.chart-container {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.chart-title {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+
+/* Tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+}
+
+th {
+    text-align: left;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+td {
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+/* Strategy / tactic blocks */
+.tactic {
+    background: var(--bg-secondary);
+    border-left: 3px solid var(--accent-orange);
+    padding: 0.75rem 1rem;
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+}
+
+.tactic.info {
+    border-left-color: var(--accent-blue);
+}
+
+.tactic.warning {
+    border-left-color: var(--accent-yellow);
+}
+
+.tactic.danger {
+    border-left-color: var(--accent-red);
+}
+
+/* Warm-up steps */
+.warmup-step {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.warmup-zone {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    min-width: 80px;
+    color: var(--accent-blue);
+}
+
+.warmup-desc {
+    flex: 1;
+    color: var(--text-primary);
+}
+
+.warmup-power {
+    font-family: var(--font-mono);
+    color: var(--text-secondary);
+    min-width: 100px;
+    text-align: right;
+}
+
+/* Budget bar */
+.budget-bar {
+    margin: 1rem 0;
+}
+
+/* Footer */
+.footer {
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+}
+
+.footer a {
+    color: var(--accent-blue);
+    text-decoration: none;
+}

@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Post-Ride Debrief — {{ ride_name }} | Puncheur{% endblock %}
+{% block content %}
+<h1>Post-Ride Debrief</h1>
+<p class="subtitle">{{ ride_name }}</p>
+
+<div class="metrics">
+    <div class="metric-card">
+        <div class="metric-value">{{ duration_min }}</div>
+        <div class="metric-label">Minutes</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-value">{{ avg_power }}</div>
+        <div class="metric-label">Avg Power (W)</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-value">{{ normalized_power }}</div>
+        <div class="metric-label">NP (W)</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-value">{{ tss }}</div>
+        <div class="metric-label">TSS</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-value">{{ intensity_factor }}</div>
+        <div class="metric-label">IF</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-value blue">{{ wbal_min }}</div>
+        <div class="metric-label">W'bal Min (J)</div>
+    </div>
+</div>
+
+{% if benchmarks %}
+<h2>Power Benchmarks</h2>
+<div class="metrics">
+    {% for label, value in benchmarks.items() %}
+    <div class="metric-card">
+        <div class="metric-value blue">{{ value }}</div>
+        <div class="metric-label">{{ label }}</div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<h2>Power</h2>
+<div class="chart-container">
+    <div class="chart-title">Power Over Time</div>
+    {{ power_svg | safe }}
+</div>
+
+<h2>W'bal</h2>
+<div class="chart-container">
+    <div class="chart-title">W' Balance ({{ rider_w_prime }}J capacity)</div>
+    {{ wbal_svg | safe }}
+</div>
+
+{% if segments %}
+<h2>Segment Analysis</h2>
+{% for seg in segments %}
+<div class="segment-card">
+    <div class="segment-header">
+        <span class="segment-name">{{ seg.name }}</span>
+        <span class="segment-grade">{{ seg.gradient }}% avg</span>
+    </div>
+    <div class="segment-metrics">
+        <div class="segment-metric">
+            <div class="segment-metric-value">{{ seg.avg_power }}W</div>
+            <div class="segment-metric-label">Avg Power</div>
+        </div>
+        <div class="segment-metric">
+            <div class="segment-metric-value">{{ seg.max_power }}W</div>
+            <div class="segment-metric-label">Max Power</div>
+        </div>
+        <div class="segment-metric">
+            <div class="segment-metric-value">{{ seg.np }}W</div>
+            <div class="segment-metric-label">NP</div>
+        </div>
+        <div class="segment-metric">
+            <div class="segment-metric-value">{{ seg.duration }}s</div>
+            <div class="segment-metric-label">Duration</div>
+        </div>
+        <div class="segment-metric">
+            <div class="segment-metric-value">{{ seg.avg_hr }}</div>
+            <div class="segment-metric-label">Avg HR</div>
+        </div>
+        <div class="segment-metric">
+            <div class="segment-metric-value">{{ seg.avg_cadence }}</div>
+            <div class="segment-metric-label">Avg Cadence</div>
+        </div>
+        <div class="segment-metric">
+            <div class="segment-metric-value">{{ seg.wbal_entry }}J</div>
+            <div class="segment-metric-label">W'bal Entry</div>
+        </div>
+        <div class="segment-metric">
+            <div class="segment-metric-value">{{ seg.elevation_gain }}m</div>
+            <div class="segment-metric-label">Elev Gain</div>
+        </div>
+    </div>
+    {% if seg.power_svg %}
+    <div class="segment-chart">
+        {{ seg.power_svg | safe }}
+    </div>
+    {% endif %}
+</div>
+{% endfor %}
+{% endif %}
+{% endblock %}

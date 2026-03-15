@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}KOM Attempt Plan — {{ segment }} | Puncheur{% endblock %}
+{% block content %}
+<h1>KOM Attempt Plan</h1>
+<p class="subtitle">{{ segment }} — {{ effort_category }}</p>
+
+<div class="metrics">
+    <div class="metric-card">
+        <div class="metric-value">{{ target_power }}</div>
+        <div class="metric-label">Target Power (W)</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-value blue">{{ target_power_per_kg }}</div>
+        <div class="metric-label">Target W/kg</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-value">{{ target_duration_s }}s</div>
+        <div class="metric-label">Target Duration</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-value green">{{ warmup_duration_min }}</div>
+        <div class="metric-label">Warm-Up (min)</div>
+    </div>
+</div>
+
+<h2>Pacing Strategy</h2>
+<div class="tactic">{{ pacing_strategy }}</div>
+
+<h3 style="margin-top: 1rem;">Pacing Splits</h3>
+<table>
+    <thead>
+        <tr>
+            <th>Section</th>
+            <th>Power %</th>
+            <th>Note</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for split in pacing_splits %}
+        <tr>
+            <td>{{ split.pct_of_effort }}</td>
+            <td>{{ split.power_pct }}%</td>
+            <td>{{ split.note }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h2>W'bal Analysis</h2>
+<div class="metrics">
+    <div class="metric-card">
+        <div class="metric-value">{{ wbal_analysis.power_above_ftp }}W</div>
+        <div class="metric-label">Above FTP</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-value">{{ wbal_analysis.total_w_cost }}J</div>
+        <div class="metric-label">Total W' Cost</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-value {% if wbal_analysis.sustainable %}green{% else %}{% endif %}">{{ wbal_analysis.depletion_pct }}%</div>
+        <div class="metric-label">W' Depletion</div>
+    </div>
+</div>
+
+{% if wbal_warning is defined %}
+<div class="tactic warning">{{ wbal_warning }}</div>
+{% endif %}
+{% endblock %}
